@@ -1,0 +1,7 @@
+<package>
+  <description brief="Components to follow a joint trajectory">
+  </description>
+  <author>Sylvain Joyeux/sylvain.joyeux@13robotics.com</author>
+  <license>MIT</license>
+  <depend package="base/orogen/types" />
+</package>

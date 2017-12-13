@@ -27,8 +27,20 @@ Does simple linear interpolation between two samples in the trajectory
     {
 	friend class PositionSamplingTaskBase;
     protected:
+        bool mBreakUpdateHook;
+        base::Time mPeriod;
+        uint64_t mTrajectorySize;
+        uint64_t mCurrentStep;
+        uint64_t updateCurrentStep(base::Time t);
+        base::JointsTrajectory mTrajectory;
+        void getJointsAtStep(uint64_t step, base::samples::Joints& result);
+        base::Time getTimeAtStep(uint64_t step) const;
 
-
+        /** Update the trajectory from the port, if needed
+         *
+         * @return true if we have a trajectory to execute, false otherwise
+         */
+        bool updateTrajectory();
 
     public:
         /** TaskContext constructor for PositionSamplingTask
@@ -86,6 +98,8 @@ Does simple linear interpolation between two samples in the trajectory
          * it again. Finally, FatalError cannot be recovered.
          */
         void updateHook();
+
+        bool breakUpdateHook();
 
         /** This hook is called by Orocos when the component is in the
          * RunTimeError state, at each activity step. See the discussion in

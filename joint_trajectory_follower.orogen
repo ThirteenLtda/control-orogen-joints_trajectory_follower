@@ -16,8 +16,12 @@ task_context "PositionSamplingTask" do
     input_port "trajectory", "/base/JointsTrajectory"
 
     # The current expected joint position
-    output_port "joint_position", '/base/JointState'
+    output_port "joints_cmd", '/base/samples/Joints'
 
-    periodic 0.1
+    # The trajectory is invalid
+    exception_states :INVALID_TRAJECTORY
+    
+    # The given trajectory's first time is not null
+    exception_states :TRAJECTORY_START_TIME_NON_NULL
 end
 

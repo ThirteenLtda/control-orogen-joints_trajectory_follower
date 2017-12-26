@@ -77,10 +77,14 @@ base::Time PositionSamplingTask::getTimeAtStep(uint64_t step) const
         return mTrajectory.times[step];
 }
 
-void PositionSamplingTask::getJointsAtStep(uint64_t step, base::samples::Joints& result)
+void PositionSamplingTask::getPositionCmdAtStep(uint64_t step, base::samples::Joints& result)
 {
     base::Time time = getTimeAtStep(step);
     mTrajectory.getJointsAtTimeStep(step, result);
+    for(size_t i=0; i<result.elements.size(); i++)
+    {
+        result.elements[i] = base::JointState::Position(result.elements[i].position);
+    }
     result.time = time;
 }
 
@@ -105,21 +109,21 @@ void PositionSamplingTask::updateHook()
 
         if (step == 0)
         {
-            getJointsAtStep(step, result);
+            getPositionCmdAtStep(step, result);
             result.time = result.time + t0;
             _joints_cmd.write(result);
         }
         else if (step == mTrajectorySize)
         {
-            getJointsAtStep(step - 1, result);
+            getPositionCmdAtStep(step - 1, result);
             if (result.time < now)
                 result.time = now;
             _joints_cmd.write(result);
         }
         else
         {
-            getJointsAtStep(step, result);
-            getJointsAtStep(step - 1, before);
+            getPositionCmdAtStep(step, result);
+            getPositionCmdAtStep(step - 1, before);
             double r = (currentTime - before.time).toSeconds() / (result.time - before.time).toSeconds();
             for (size_t i = 0; i < before.elements.size(); ++i)
                 result.elements[i].position = result.elements[i].position * r + before.elements[i].position * (1 - r);

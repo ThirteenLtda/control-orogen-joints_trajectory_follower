@@ -48,9 +48,9 @@ describe 'PositionSamplingTask' do
     end
 
 
-    def setup_and_read_samples(names: [], times: [], elements: [], sample_count: 10)
+    def setup_and_read_samples(times: [], elements: [], sample_count: 10)
         traj = Types.base.JointsTrajectory.new(
-            names: names,
+            names: [],
             times: times,
             elements: elements)
 
@@ -73,11 +73,9 @@ describe 'PositionSamplingTask' do
 
     it "sends one sample per cycle when there are no times specified" do
         samples = setup_and_read_samples(
-            names: ['joint 1'],
             elements: [[Types.base.JointState.new(position: 0), Types.base.JointState.new(position: 1)]],
             sample_count: 10)
 
-        assert_equal ['joint 1'], samples[0].names
         assert_matches_period samples
 
         positions = samples.map { |s| s.elements[0].position }
@@ -86,7 +84,6 @@ describe 'PositionSamplingTask' do
 
     it "sub-samples the trajectory" do
         samples = setup_and_read_samples(
-            names: ['joint 1'],
             times: [Time.at(0), Time.at(1)],
             elements: [[Types.base.JointState.new(position: 0), Types.base.JointState.new(position: 1)]],
             sample_count: 15)

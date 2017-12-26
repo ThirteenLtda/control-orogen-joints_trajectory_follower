@@ -46,7 +46,6 @@ bool PositionSamplingTask::updateTrajectory()
         return false;
     else if (state == RTT::OldData)
         return true;
-
     if (!mTrajectory.isValid())
     {
         exception(INVALID_TRAJECTORY);
@@ -56,6 +55,11 @@ bool PositionSamplingTask::updateTrajectory()
     {
         exception(TRAJECTORY_START_TIME_NON_NULL);
         throw std::runtime_error("received trajectory with a non-null start time");
+    }
+    else if(mTrajectory.names.empty() && mTrajectory.names.size() != mTrajectory.elements.size())
+    {
+        exception(INVALID_JOINT_NAMES);
+        throw std::runtime_error("received trajectory with no joint names");
     }
 
     mCurrentStep = 0;

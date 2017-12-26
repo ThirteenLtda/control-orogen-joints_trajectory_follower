@@ -4,14 +4,14 @@ version "0.1"
 import_types_from "std"
 import_types_from "base"
 
-# Periodically emits a joint position based on a JointTrajectory 
-# 
+# Periodically emits a joint position based on a JointTrajectory
+#
 # Does simple linear interpolation between two samples in the trajectory
 task_context "PositionSamplingTask" do
     needs_configuration
 
     property "period", "/base/Time"
-    
+
     # The trajectory
     input_port "trajectory", "/base/JointsTrajectory"
 
@@ -20,8 +20,10 @@ task_context "PositionSamplingTask" do
 
     # The trajectory is invalid
     exception_states :INVALID_TRAJECTORY
-    
+
     # The given trajectory's first time is not null
     exception_states :TRAJECTORY_START_TIME_NON_NULL
-end
 
+    #The given trajectory has no name joints
+    exception_states :INVALID_JOINT_NAMES
+end

@@ -36,9 +36,21 @@ describe 'PositionSamplingTask' do
         assert_state_change(task) { |s| s == :TRAJECTORY_START_TIME_NON_NULL }
     end
 
-    def setup_and_read_samples(times: [], elements: [], sample_count: 10)
+    it "rejects a trajectory with no joint names" do
         traj = Types.base.JointsTrajectory.new(
             names: [],
+            times: [Time.at(0)],
+            elements: [[Types.base.JointState.new]])
+
+        task.start
+        task_trajectory.write(traj)
+        assert_state_change(task) { |s| s == :INVALID_JOINT_NAMES }
+    end
+
+
+    def setup_and_read_samples(names: [], times: [], elements: [], sample_count: 10)
+        traj = Types.base.JointsTrajectory.new(
+            names: names,
             times: times,
             elements: elements)
 
@@ -61,9 +73,11 @@ describe 'PositionSamplingTask' do
 
     it "sends one sample per cycle when there are no times specified" do
         samples = setup_and_read_samples(
+            names: ['joint 1'],
             elements: [[Types.base.JointState.new(position: 0), Types.base.JointState.new(position: 1)]],
             sample_count: 10)
 
+        assert_equal ['joint 1'], samples[0].names
         assert_matches_period samples
 
         positions = samples.map { |s| s.elements[0].position }
@@ -72,6 +86,7 @@ describe 'PositionSamplingTask' do
 
     it "sub-samples the trajectory" do
         samples = setup_and_read_samples(
+            names: ['joint 1'],
             times: [Time.at(0), Time.at(1)],
             elements: [[Types.base.JointState.new(position: 0), Types.base.JointState.new(position: 1)]],
             sample_count: 15)

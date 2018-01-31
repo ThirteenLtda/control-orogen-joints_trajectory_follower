@@ -33,7 +33,7 @@ Does simple linear interpolation between two samples in the trajectory
         uint64_t mCurrentStep;
         uint64_t updateCurrentStep(base::Time t);
         base::JointsTrajectory mTrajectory;
-        void getJointsAtStep(uint64_t step, base::samples::Joints& result);
+        void getPositionCmdAtStep(uint64_t step, base::samples::Joints& result);
         base::Time getTimeAtStep(uint64_t step) const;
 
         /** Update the trajectory from the port, if needed
@@ -52,7 +52,7 @@ Does simple linear interpolation between two samples in the trajectory
         /** TaskContext constructor for PositionSamplingTask
          * \param name Name of the task. This name needs to be unique to make it identifiable for nameservices.
          * \param engine The RTT Execution engine to be used for this task, which serialises the execution of all commands, programs, state machines and incoming events for a task.
-         * 
+         *
          */
         PositionSamplingTask(std::string const& name, RTT::ExecutionEngine* engine);
 
@@ -123,4 +123,3 @@ Does simple linear interpolation between two samples in the trajectory
 }
 
 #endif
-

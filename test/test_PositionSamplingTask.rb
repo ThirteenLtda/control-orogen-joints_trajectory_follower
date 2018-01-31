@@ -36,6 +36,18 @@ describe 'PositionSamplingTask' do
         assert_state_change(task) { |s| s == :TRAJECTORY_START_TIME_NON_NULL }
     end
 
+    it "rejects a trajectory with no joint names" do
+        traj = Types.base.JointsTrajectory.new(
+            names: [],
+            times: [Time.at(0)],
+            elements: [[Types.base.JointState.new]])
+
+        task.start
+        task_trajectory.write(traj)
+        assert_state_change(task) { |s| s == :INVALID_JOINT_NAMES }
+    end
+
+
     def setup_and_read_samples(times: [], elements: [], sample_count: 10)
         traj = Types.base.JointsTrajectory.new(
             names: [],

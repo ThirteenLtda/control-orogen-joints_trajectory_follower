@@ -56,7 +56,7 @@ bool PositionSamplingTask::updateTrajectory()
         exception(TRAJECTORY_START_TIME_NON_NULL);
         throw std::runtime_error("received trajectory with a non-null start time");
     }
-   
+
     mCurrentStep = 0;
     mTrajectorySize = 0;
     if (!mTrajectory.elements.empty())
@@ -110,10 +110,12 @@ void PositionSamplingTask::updateHook()
         }
         else if (step == mTrajectorySize)
         {
+            std::cout << step << " " << mTrajectorySize << std::endl;
             getPositionCmdAtStep(step - 1, result);
             if (result.time < now)
                 result.time = now;
             _joints_cmd.write(result);
+            report(TRAJECTORY_END);
         }
         else
         {

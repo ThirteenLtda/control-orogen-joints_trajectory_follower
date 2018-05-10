@@ -26,4 +26,6 @@ task_context "PositionSamplingTask" do
 
     #The given trajectory has no name joints
     exception_states :INVALID_JOINT_NAMES
+
+    runtime_states :TRAJECTORY_END
 end

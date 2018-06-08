@@ -41,11 +41,12 @@ bool PositionSamplingTask::startHook()
 }
 bool PositionSamplingTask::updateTrajectory()
 {
-    RTT::FlowStatus state = _trajectory.read(mTrajectory, false);
-    if (state == RTT::NoData)
+    RTT::FlowStatus flow = _trajectory.read(mTrajectory, false);
+    if (flow == RTT::NoData)
         return false;
-    else if (state == RTT::OldData)
-        return true;
+    else if (flow == RTT::OldData)
+        return (mCurrentStep < mTrajectorySize);
+
     if (!mTrajectory.isValid())
     {
         exception(INVALID_TRAJECTORY);
@@ -59,8 +60,15 @@ bool PositionSamplingTask::updateTrajectory()
 
     mCurrentStep = 0;
     mTrajectorySize = 0;
-    if (!mTrajectory.elements.empty())
-        mTrajectorySize = mTrajectory.elements[0].size();
+    if (mTrajectory.elements.empty())
+    {
+        state(TRAJECTORY_EXECUTION);
+        state(TRAJECTORY_END);
+        return false;
+    }
+
+    mTrajectorySize = mTrajectory.elements[0].size();
+    report(TRAJECTORY_EXECUTION);
     return true;
 }
 
@@ -95,6 +103,8 @@ void PositionSamplingTask::updateHook()
 
         if (!updateTrajectory())
         {
+            if (state() != WAITING_FOR_TRAJECTORY)
+                report(WAITING_FOR_TRAJECTORY);
             usleep(10000);
             continue;
         }
@@ -102,13 +112,7 @@ void PositionSamplingTask::updateHook()
         base::Time now = base::Time::now();
         uint64_t step = updateCurrentStep(currentTime);
 
-        if (step == 0)
-        {
-            getPositionCmdAtStep(step, result);
-            result.time = result.time + t0;
-            _joints_cmd.write(result);
-        }
-        else if (step == mTrajectorySize)
+        if (step == mTrajectorySize)
         {
             std::cout << step << " " << mTrajectorySize << std::endl;
             getPositionCmdAtStep(step - 1, result);
@@ -116,14 +120,19 @@ void PositionSamplingTask::updateHook()
                 result.time = now;
             _joints_cmd.write(result);
             report(TRAJECTORY_END);
+            report(WAITING_FOR_TRAJECTORY);
         }
         else
         {
             getPositionCmdAtStep(step, result);
-            getPositionCmdAtStep(step - 1, before);
-            double r = (currentTime - before.time).toSeconds() / (result.time - before.time).toSeconds();
-            for (size_t i = 0; i < before.elements.size(); ++i)
-                result.elements[i].position = result.elements[i].position * r + before.elements[i].position * (1 - r);
+            if (step > 1)
+            {
+                getPositionCmdAtStep(step - 1, before);
+
+                double r = (currentTime - before.time).toSeconds() / (result.time - before.time).toSeconds();
+                for (size_t i = 0; i < before.elements.size(); ++i)
+                    result.elements[i].position = result.elements[i].position * r + before.elements[i].position * (1 - r);
+            }
             result.time = t0 + currentTime;
             _joints_cmd.write(result);
         }
